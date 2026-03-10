@@ -1,0 +1,21 @@
+{
+    "name": "Asignación de equipos tipo inventario",
+    "version": "1.0",
+    "description": "Modulo de asignacion de equipos con el estilo del inventario.",
+    "summary": "Modulo de asignacion de equipos con el estilo del inventario.",
+    "author": "DGV",
+    # 'website': '',
+    "license": "LGPL-3",
+    "category": "Supply Chain/Maintenance",
+    "depends": ["stock", "maintenance", "hr", "hr_maintenance"],
+    "data": [
+        "security/ir.model.access.csv",
+        "data/uid_sequence_view.xml",
+        "views/hr_equipment_view_kanban.xml",
+        "views/maintenance_equipment_view.xml",
+        "views/maintenance_equipment_view_hr.xml",
+        "views/equipment_allocations_line_view.xml",
+    ],
+    "auto_install": False,
+    "application": False,
+}

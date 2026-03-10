@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="hr_equipment_view_form_inherit_maintenance_equipment"
+        model="ir.ui.view">
+        <field name="name">maintenance.equipment.view.form.inherit</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id"
+            ref="maintenance.hr_equipment_view_form"/>
+        <field name="arch"
+            type="xml">
+            <xpath expr="//page[@name='maintenance']"
+                position="after">
+                <page string="Movimientos">
+                    <field name="equipment_lines_ids">
+                        <list editable="bottom"
+                            default_order="id desc"
+                            delete="0">
+                            <field name="equipment_id"
+                                readonly="1"
+                                optional="show"
+                                width="150"/>
+                            <field name="employee_id"
+                                readonly="is_applied"/>
+                            <field name="warehouse_origin_id"
+                                readonly="is_applied"
+                                width="150"/>
+                            <field name="warehouse_dest_id"
+                                readonly="is_applied"
+                                width="150"/>
+                            <field name="move_type"
+                                readonly="is_applied"
+                                width="150"/>
+                            <field name="quantity"
+                                readonly="is_applied"
+                                width="80"/>
+
+                            <button string="Aplicar"
+                                name="apply_movement"
+                                type="object"
+                                icon="fa-check"
+                                invisible="is_applied"
+                                class="oe_highlight"/>
+                            <button string="Cancelar"
+                                name="cancel_movesments"
+                                type="object"
+                                icon="fa-undo"
+                                invisible="not is_applied or is_canceled"
+                                class="oe_stat_button"/>
+                        </list>
+                    </field>
+                </page>
+                <page string="Almacenes">
+                    <field name="warehouse_lines_ids">
+                        <list default_order="id desc"
+                            delete="0"
+                            create="0">
+                            <field name="warehouse_id"/>
+                            <field name="employee_ids"
+                                widget="many2many_tags"/>
+                            <field name="quantity_total"
+                                width="150"/>
+                            <field name="quantity_used"
+                                width="150"/>
+                            <field name="quantity_available"
+                                width="150"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+            <xpath expr="//group/group[2]"
+                position="after">
+                <group string="Información de las asignaciones">
+                    <field name="quantity_total_equipment" />
+                    <field name="quantity_available" />
+                    <field name="quantity_used" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

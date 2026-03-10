@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="equipment_allocations_line_view_form"
+        model="ir.ui.view">
+        <field name="name">equipment.allocations.line.view.form</field>
+        <field name="model">equipment.allocations.line</field>
+        <field name="arch"
+            type="xml">
+            <form string="Movimiento de Equipo">
+                <header>
+                    <button string="Aplicar"
+                        name="apply_movement"
+                        type="object"
+                        class="oe_highlight"
+                        invisible="is_applied"/>
+                    <button string="Cancelar"
+                        name="cancel_movesments"
+                        type="object"
+                        class="oe_stat_button"
+                        invisible="not is_applied or is_canceled"/>
+
+                    <field name="move_type"
+                        widget="statusbar"
+                        invisible="not is_applied"
+                        readonly="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="uid"
+                                readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Información general">
+                            <field name="equipment_id"
+                                readonly="is_applied"/>
+                            <field name="move_type"
+                                readonly="is_applied"/>
+                            <field name="quantity"
+                                readonly="is_applied"/>
+                            <field name="employee_id"
+                                readonly="is_applied"/>
+                        </group>
+                        <group string="Ubicación">
+                            <field name="warehouse_origin_id"
+                                readonly="is_applied"/>
+                            <field name="warehouse_dest_id"
+                                readonly="is_applied"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="origin"
+                            readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+    <record id="equipment_allocations_line_view_list"
+        model="ir.ui.view">
+        <field name="name">equipment.allocations.line.view.list</field>
+        <field name="model">equipment.allocations.line</field>
+        <field name="arch"
+            type="xml">
+            <list default_order="id desc">
+                <field name="uid"
+                    width="100"
+                    decoration-bf="1"/>
+                <field name="equipment_id"
+                    readonly="is_applied"/>
+                <field name="employee_id"
+                    readonly="is_applied"/>
+                <field name="warehouse_origin_id"
+                    readonly="is_applied"
+                    width="150"/>
+                <field name="warehouse_dest_id"
+                    readonly="is_applied"
+                    width="150"/>
+                <field name="move_type"
+                    widget="badge"
+                    width="140"
+                    decoration-success="move_type == 'income'"
+                    decoration-danger="move_type == 'output'"
+                    decoration-info="move_type == 'assigned'"
+                    decoration-warning="move_type == 'return'"/>
+                <field name="quantity"
+                    readonly="is_applied"
+                    width="80"/>
+
+                <button name="apply_movement"
+                    type="object"
+                    icon="fa-check"
+                    title="Aplicar movimiento"
+                    class="oe_highlight"
+                    invisible="is_applied"/>
+                <button name="cancel_movesments"
+                    type="object"
+                    icon="fa-undo"
+                    title="Cancelar movimiento"
+                    class="oe_stat_button"
+                    invisible="not is_applied or is_canceled"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="equipment_allocations_line_action"
+        model="ir.actions.act_window">
+        <field name="name">Asignación de equipos</field>
+        <field name="res_model">equipment.allocations.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="path">equipment_allocations</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help"
+            type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Desde aquí puedes gestionar tus asignaciones.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="equipment_allocations_line_menu"
+        name="Asignación de equipos"
+        action="equipment_allocations_as_stock.equipment_allocations_line_action"
+        parent="maintenance.menu_maintenance_title"
+        sequence="2" />
+
+</odoo>
