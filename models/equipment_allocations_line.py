@@ -96,16 +96,6 @@ class EquipmentAllocationsLines(models.Model):
                 (rec.equipment_id.id,),
             )
 
-            # self.env.cr.execute(
-            #     "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s AND warehouse_id=%s FOR UPDATE",
-            #     (rec.equipment_id.id, rec.warehouse_origin_id.id),
-            # )
-
-            self.env.cr.execute(
-                "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s FOR UPDATE",
-                (rec.equipment_id.id,),
-            )
-
             if rec.is_applied:
                 raise exceptions.UserError("Este movimiento ya fue aplicado.")
 
@@ -122,6 +112,11 @@ class EquipmentAllocationsLines(models.Model):
                     raise exceptions.ValidationError(
                         "Debe seleccionar un almacén de origen."
                     )
+
+                self.env.cr.execute(
+                    "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s AND warehouse_id=%s FOR UPDATE",
+                    (rec.equipment_id.id, rec.warehouse_origin_id.id),
+                )
 
                 warehouse = self.env["warehouse.allocations.line"].search(
                     [
@@ -161,11 +156,17 @@ class EquipmentAllocationsLines(models.Model):
                         "Debe seleccionar un almacén de destino."
                     )
 
+                self.env.cr.execute(
+                    "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s AND warehouse_id=%s FOR UPDATE",
+                    (rec.equipment_id.id, rec.warehouse_dest_id.id),
+                )
+
                 domain = [
                     ("equipment_id", "=", rec.equipment_id.id),
                     ("employee_id", "=", rec.employee_id.id),
                     ("is_applied", "=", True),
                     ("move_type", "in", ["assigned", "return"]),
+                    ("warehouse_dest_id", "=", rec.warehouse_dest_id.id),
                 ]
 
                 grouped = self.read_group(
@@ -217,6 +218,11 @@ class EquipmentAllocationsLines(models.Model):
                         "Debe seleccionar un almacén de destino."
                     )
 
+                self.env.cr.execute(
+                    "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s AND warehouse_id=%s FOR UPDATE",
+                    (rec.equipment_id.id, rec.warehouse_dest_id.id),
+                )
+
                 line = self._get_or_create_warehouse_line(
                     rec.equipment_id, rec.warehouse_dest_id
                 )
@@ -244,6 +250,11 @@ class EquipmentAllocationsLines(models.Model):
                     raise exceptions.ValidationError(
                         "Debe seleccionar un almacén de origen."
                     )
+
+                self.env.cr.execute(
+                    "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s AND warehouse_id=%s FOR UPDATE",
+                    (rec.equipment_id.id, rec.warehouse_origin_id.id),
+                )
 
                 line = self.env["warehouse.allocations.line"].search(
                     [
