@@ -15,7 +15,7 @@
                         class="oe_highlight"
                         invisible="is_applied"/>
                     <button string="Cancelar"
-                        name="cancel_movesments"
+                        name="cancel_movements"
                         type="object"
                         class="oe_stat_button"
                         invisible="not is_applied or is_canceled"/>
@@ -60,6 +60,47 @@
         </field>
     </record>
 
+    <record id="equipment_allocations_line_view_search"
+        model="ir.ui.view">
+        <field name="name">equipment.allocations.line.search</field>
+        <field name="model">equipment.allocations.line</field>
+        <field name="arch"
+            type="xml">
+            <search string="Buscar movimientos de equipo">
+                <field name="uid"/>
+                <field name="equipment_id"/>
+                <field name="employee_id"/>
+
+                <filter name="filter_assigned"
+                    string="Asignaciones"
+                    domain="[('move_type', '=', 'assigned')]"/>
+                <filter name="filter_return"
+                    string="Devoluciones"
+                    domain="[('move_type', '=', 'return')]"/>
+                <separator/>
+                <filter name="filter_income"
+                    string="Ingresos"
+                    domain="[('move_type', '=', 'income')]"/>
+                <filter name="filter_output"
+                    string="Salidas"
+                    domain="[('move_type', '=', 'output')]"/>
+
+                <group>
+                    <filter string="Tipo movimiento"
+                        name="group_by_move_type"
+                        context="{'group_by':'move_type'}"/>
+                    <filter string="Empleado"
+                        name="group_by_employee_id"
+                        context="{'group_by':'employee_id'}"/>
+                    <filter string="Equipo"
+                        name="group_by_equipment_id"
+                        context="{'group_by':'equipment_id'}"/>
+                </group>
+
+            </search>
+        </field>
+    </record>
+
     <record id="equipment_allocations_line_view_list"
         model="ir.ui.view">
         <field name="name">equipment.allocations.line.view.list</field>
@@ -97,7 +138,7 @@
                     title="Aplicar movimiento"
                     class="oe_highlight"
                     invisible="is_applied"/>
-                <button name="cancel_movesments"
+                <button name="cancel_movements"
                     type="object"
                     icon="fa-undo"
                     title="Cancelar movimiento"

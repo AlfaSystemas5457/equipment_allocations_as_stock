@@ -42,7 +42,7 @@
                                 invisible="is_applied"
                                 class="oe_highlight"/>
                             <button string="Cancelar"
-                                name="cancel_movesments"
+                                name="cancel_movements"
                                 type="object"
                                 icon="fa-undo"
                                 invisible="not is_applied or is_canceled"

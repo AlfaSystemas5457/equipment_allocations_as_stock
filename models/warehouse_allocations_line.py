@@ -1,14 +1,14 @@
 from odoo import models, fields, api, exceptions
 
 
-class warehouseAllocationsLine(models.Model):
-    _name = "warehouse.aloocations.line"
+class WarehouseAllocationsLine(models.Model):
+    _name = "warehouse.allocations.line"
     _description = "Almacenes de asignación de equipos"
     _rec_name = "display_name"
     _order = "id DESC"
 
     display_name = fields.Char(string="Nombre", compute="_compute_display_name")
-    warehouse_id = fields.Many2one("stock.warehouse", string="Almacen")
+    warehouse_id = fields.Many2one("stock.warehouse", string="Almacén")
     equipment_id = fields.Many2one("maintenance.equipment", string="Equipo")
     employee_ids = fields.Many2many(
         "hr.employee",
@@ -27,6 +27,7 @@ class warehouseAllocationsLine(models.Model):
         string="Cantidad total", compute="_compute_quantities", store=True
     )
 
+    @api.depends("warehouse_id", "equipment_id")
     def _compute_display_name(self):
         for rec in self:
             rec.display_name = f"{rec.id} / {rec.warehouse_id.name if rec.warehouse_id else 'NA'} / {rec.equipment_id.name if rec.equipment_id else 'NA'}"
@@ -129,7 +130,7 @@ class warehouseAllocationsLine(models.Model):
         for rec in self:
             if rec.quantity_total < 0:
                 raise exceptions.ValidationError(
-                    "La cantidad en el almacén no puede ser negativa."
+                    "La cantidad total en el almacén no puede ser negativa."
                 )
             if rec.quantity_used < 0:
                 raise exceptions.ValidationError(

@@ -1,22 +1,22 @@
 from odoo import models, fields, api, exceptions
 
 
-class equipmentAllocationsLines(models.Model):
+class EquipmentAllocationsLines(models.Model):
     _name = "equipment.allocations.line"
-    _description = "Linea de asignación de equipos"
+    _description = "Línea de asignación de equipos"
     _rec_name = "display_name"
     _order = "id DESC"
     _inherit = ["mail.thread"]
 
     uid = fields.Char("UID", readonly=True, copy=False, index=True, default="Borrador")
     display_name = fields.Char(string="Nombre", compute="_compute_display_name")
-    employee_id = fields.Many2one("hr.employee", string="Contacto")
+    employee_id = fields.Many2one("hr.employee", string="Empleado")
 
     equipment_id = fields.Many2one(
         "maintenance.equipment", string="Equipo", required=True, ondelete="restrict"
     )
-    warehouse_origin_id = fields.Many2one("stock.warehouse", string="Almacen de origen")
-    warehouse_dest_id = fields.Many2one("stock.warehouse", string="Almacen de destino")
+    warehouse_origin_id = fields.Many2one("stock.warehouse", string="Almacén de origen")
+    warehouse_dest_id = fields.Many2one("stock.warehouse", string="Almacén de destino")
     quantity = fields.Integer(string="Cantidad")
 
     is_applied = fields.Boolean(string="Aplicado?", default=False)
@@ -35,14 +35,6 @@ class equipmentAllocationsLines(models.Model):
         required=True,
     )
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            if not vals.get("uid"):
-                vals["uid"] = "Borrador"
-
-        return super(equipmentAllocationsLines, self).create(vals_list)
-
     def _compute_display_name(self):
         for rec in self:
             rec.display_name = (
@@ -50,7 +42,7 @@ class equipmentAllocationsLines(models.Model):
             )
 
     def _get_or_create_warehouse_line(self, equipment, warehouse):
-        line = self.env["warehouse.aloocations.line"].search(
+        line = self.env["warehouse.allocations.line"].search(
             [
                 ("equipment_id", "=", equipment.id),
                 ("warehouse_id", "=", warehouse.id),
@@ -59,7 +51,7 @@ class equipmentAllocationsLines(models.Model):
         )
 
         if not line:
-            line = self.env["warehouse.aloocations.line"].create(
+            line = self.env["warehouse.allocations.line"].create(
                 {
                     "equipment_id": equipment.id,
                     "warehouse_id": warehouse.id,
@@ -69,13 +61,33 @@ class equipmentAllocationsLines(models.Model):
         return line
 
     def _clean_empty_warehouse_lines(self, equipment):
-        self.env["warehouse.aloocations.line"].search(
+        self.env["warehouse.allocations.line"].search(
             [
                 ("equipment_id", "=", equipment.id),
                 ("quantity_total", "=", 0),
                 ("quantity_used", "=", 0),
             ]
         ).unlink()
+
+    @api.constrains("quantity")
+    def _check_quantity(self):
+        for rec in self:
+            if rec.quantity <= 0:
+                raise exceptions.ValidationError("La cantidad debe ser mayor que cero.")
+
+    def _apply_record(self):
+        self.write(
+            {
+                "uid": (
+                    self.uid
+                    if self.uid != "Borrador"
+                    else self.env["ir.sequence"].next_by_code(
+                        "equipment.allocations.line"
+                    )
+                ),
+                "is_applied": True,
+            }
+        )
 
     def apply_movement(self):
         for rec in self:
@@ -84,8 +96,13 @@ class equipmentAllocationsLines(models.Model):
                 (rec.equipment_id.id,),
             )
 
+            # self.env.cr.execute(
+            #     "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s AND warehouse_id=%s FOR UPDATE",
+            #     (rec.equipment_id.id, rec.warehouse_origin_id.id),
+            # )
+
             self.env.cr.execute(
-                "SELECT id FROM warehouse_aloocations_line WHERE equipment_id=%s FOR UPDATE",
+                "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s FOR UPDATE",
                 (rec.equipment_id.id,),
             )
 
@@ -98,7 +115,7 @@ class equipmentAllocationsLines(models.Model):
             if rec.move_type == "assigned":
                 if not rec.employee_id:
                     raise exceptions.UserError(
-                        "Debe haber un empleado para realizar la operacion de asignación."
+                        "Debe haber un empleado para realizar la operación de asignación."
                     )
 
                 if not rec.warehouse_origin_id:
@@ -106,7 +123,7 @@ class equipmentAllocationsLines(models.Model):
                         "Debe seleccionar un almacén de origen."
                     )
 
-                warehouse = self.env["warehouse.aloocations.line"].search(
+                warehouse = self.env["warehouse.allocations.line"].search(
                     [
                         ("equipment_id", "=", rec.equipment_id.id),
                         ("warehouse_id", "=", rec.warehouse_origin_id.id),
@@ -130,24 +147,13 @@ class equipmentAllocationsLines(models.Model):
                         "quantity_used": rec.equipment_id.quantity_used + rec.quantity,
                     }
                 )
-                rec.write(
-                    {
-                        "uid": (
-                            rec.uid
-                            if rec.uid != "Borrador"
-                            else self.env["ir.sequence"].next_by_code(
-                                "equipment.allocations.line"
-                            )
-                        ),
-                        "is_applied": True,
-                    }
-                )
+                rec._apply_record()
                 continue
 
             if rec.move_type == "return":
                 if not rec.employee_id:
                     raise exceptions.UserError(
-                        "Debe haber un empleado para realizar la operacion de devolución."
+                        "Debe haber un empleado para realizar la operación de devolución."
                     )
 
                 if not rec.warehouse_dest_id:
@@ -197,24 +203,13 @@ class equipmentAllocationsLines(models.Model):
 
                 rec.equipment_id.write(values)
 
-                rec.write(
-                    {
-                        "uid": (
-                            rec.uid
-                            if rec.uid != "Borrador"
-                            else self.env["ir.sequence"].next_by_code(
-                                "equipment.allocations.line"
-                            )
-                        ),
-                        "is_applied": True,
-                    }
-                )
+                rec._apply_record()
                 continue
 
             if rec.move_type == "income":
                 if rec.employee_id:
                     raise exceptions.UserError(
-                        "No puede haber contactos en un movimiento de ingreso."
+                        "No puede haber empleados en un movimiento de ingreso."
                     )
 
                 if not rec.warehouse_dest_id:
@@ -234,18 +229,7 @@ class equipmentAllocationsLines(models.Model):
                     }
                 )
 
-                rec.write(
-                    {
-                        "uid": (
-                            rec.uid
-                            if rec.uid != "Borrador"
-                            else self.env["ir.sequence"].next_by_code(
-                                "equipment.allocations.line"
-                            )
-                        ),
-                        "is_applied": True,
-                    }
-                )
+                rec._apply_record()
 
                 self._clean_empty_warehouse_lines(rec.equipment_id)
                 continue
@@ -253,7 +237,7 @@ class equipmentAllocationsLines(models.Model):
             if rec.move_type == "output":
                 if rec.employee_id:
                     raise exceptions.UserError(
-                        "No puede haber contactos en un movimiento de salida."
+                        "No puede haber empleados en un movimiento de salida."
                     )
 
                 if not rec.warehouse_origin_id:
@@ -261,7 +245,7 @@ class equipmentAllocationsLines(models.Model):
                         "Debe seleccionar un almacén de origen."
                     )
 
-                line = self.env["warehouse.aloocations.line"].search(
+                line = self.env["warehouse.allocations.line"].search(
                     [
                         ("equipment_id", "=", rec.equipment_id.id),
                         ("warehouse_id", "=", rec.warehouse_origin_id.id),
@@ -286,24 +270,13 @@ class equipmentAllocationsLines(models.Model):
                     }
                 )
 
-                rec.write(
-                    {
-                        "uid": (
-                            rec.uid
-                            if rec.uid != "Borrador"
-                            else self.env["ir.sequence"].next_by_code(
-                                "equipment.allocations.line"
-                            )
-                        ),
-                        "is_applied": True,
-                    }
-                )
+                rec._apply_record()
 
-                if new_qty == 0:
+                if new_qty <= 0:
                     line.unlink()
                 continue
 
-    def cancel_movesments(self):
+    def cancel_movements(self):
         for rec in self:
             if not rec.is_applied:
                 raise exceptions.ValidationError("El movimiento no ha sido aplicado")

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_equipment_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs"
+                t-as="o">
+
+                <t t-set="layout_document_title">
+                    <span>Reporte de Equipo - <span t-field="o.name"/>
+                    </span>
+                </t>
+
+                <t t-call="web.external_layout">
+                    <main class="article container h-100 w-100 p-2">
+                        <div class="page mt-2">
+                            <h4>Información general</h4>
+
+                            <table class="table table-sm"
+                                style="font-size: 12px;">
+                                <tr>
+                                    <td class="mx-2">
+                                        <strong>Total de equipos</strong>
+                                    </td>
+                                    <td class="mx-2 text-center">
+                                        <span t-field="o.quantity_total_equipment"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="mx-2">
+                                        <strong>Equipos asignados</strong>
+                                    </td>
+                                    <td class="mx-2 text-center">
+                                        <span t-field="o.quantity_used"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="mx-2">
+                                        <strong>Equipos disponibles</strong>
+                                    </td>
+                                    <td class="mx-2 text-center">
+                                        <span t-field="o.quantity_available"/>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <h4>Equipos por almacén</h4>
+
+                            <table class="table table-sm table-bordered"
+                                style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th class="mx-2">Almacén</th>
+                                        <th class="mx-2">Empleados</th>
+                                        <th class="mx-2">Total</th>
+                                        <th class="mx-2">Asignados</th>
+                                        <th class="mx-2">Disponibles</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="o.warehouse_lines_ids"
+                                        t-as="w">
+                                        <td class="mx-2">
+                                            <span t-field="w.warehouse_id.name"/>
+                                        </td>
+                                        <td class="mx-2">
+                                            <span t-esc="', '.join(w.employee_ids.mapped('name'))"/>
+                                        </td>
+                                        <td class="mx-2 text-center">
+                                            <span t-field="w.quantity_total"/>
+                                        </td>
+                                        <td class="mx-2 text-center">
+                                            <span t-field="w.quantity_used"/>
+                                        </td>
+                                        <td class="mx-2 text-center">
+                                            <span t-field="w.quantity_available"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h4>Últimos movimientos</h4>
+                            <span>
+                                <strong>Solo se muestran los últimos 10 movimientos</strong>
+                            </span>
+
+                            <table class="table table-sm table-bordered"
+                                style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th class="mx-2">UID</th>
+                                        <th class="mx-2">Equipo</th>
+                                        <th class="mx-2">Empleado</th>
+                                        <th class="mx-2">Almacén de origen</th>
+                                        <th class="mx-2">Almacén de destino</th>
+                                        <th class="mx-2">Tipo de movimiento</th>
+                                        <th class="mx-2">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="o.equipment_lines_ids.sorted(key=lambda r: r.id, reverse=True)[:10]"
+                                        t-as="l">
+                                        <td class="mx-2">
+                                            <span t-field="l.uid" />
+                                        </td>
+                                        <td class="mx-2">
+                                            <span t-field="l.equipment_id.name" />
+                                        </td>
+                                        <td class="mx-2">
+                                            <span t-field="l.employee_id.name" />
+                                        </td>
+                                        <td class="mx-2 text-center">
+                                            <span t-field="l.warehouse_origin_id.name" />
+                                        </td>
+                                        <td class="mx-2 text-center">
+                                            <span t-field="l.warehouse_dest_id.name" />
+                                        </td>
+                                        <td class="mx-2 text-center">
+                                            <span t-field="l.move_type" />
+                                        </td>
+                                        <td class="mx-2 text-center">
+                                            <span t-field="l.quantity" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </main>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="report_equipment_allocations"
+        model="ir.actions.report">
+        <field name="name">Reporte de Equipo</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">equipment_allocations_as_stock.report_equipment_template</field>
+        <field name="report_file">equipment_allocations_as_stock.report_equipment_template</field>
+        <field name="binding_model_id"
+            ref="maintenance.model_maintenance_equipment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

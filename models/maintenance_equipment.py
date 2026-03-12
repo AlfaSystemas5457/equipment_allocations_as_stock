@@ -1,14 +1,13 @@
 from odoo import models, fields, api
 
 
-class maintenanceEquipment(models.Model):
+class MaintenanceEquipment(models.Model):
     _inherit = "maintenance.equipment"
 
     employee_ids = fields.Many2many("hr.employee", string="Empleados")
 
     quantity_available = fields.Integer(
         string="Cantidad disponible total",
-        default=0,
         readonly=True,
         compute="_compute_quantity_available",
     )
@@ -16,7 +15,7 @@ class maintenanceEquipment(models.Model):
         string="Cantidad asignada total", default=0, readonly=True
     )
     quantity_total_equipment = fields.Integer(
-        string="Cantidad de equipos", default=0, readonly=True
+        string="Cantidad total de equipos", default=0, readonly=True
     )
 
     equipment_lines_ids = fields.One2many(
@@ -25,10 +24,12 @@ class maintenanceEquipment(models.Model):
         string="Movimientos del equipo",
     )
     warehouse_lines_ids = fields.One2many(
-        "warehouse.aloocations.line", "equipment_id", string="Almacenes del equipo"
+        "warehouse.allocations.line", "equipment_id", string="Almacenes del equipo"
     )
 
     @api.depends("quantity_total_equipment", "quantity_used")
     def _compute_quantity_available(self):
         for rec in self:
-            rec.quantity_available = rec.quantity_total_equipment - rec.quantity_used
+            rec.quantity_available = max(
+                rec.quantity_total_equipment - rec.quantity_used, 0
+            )
