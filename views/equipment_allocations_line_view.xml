@@ -12,13 +12,23 @@
                     <button string="Aplicar"
                         name="apply_movement"
                         type="object"
+                        icon="fa-check"
                         class="oe_highlight"
                         invisible="is_applied"/>
                     <button string="Cancelar"
                         name="cancel_movements"
                         type="object"
+                        icon="fa-undo"
                         class="oe_stat_button"
                         invisible="not is_applied or is_canceled"/>
+                    <button string="Eliminar"
+                        name="action_delete"
+                        type="object"
+                        icon="fa-trash"
+                        invisible="is_applied"
+                        title="Eliminar registro"
+                        confirm="¿Seguro que quieres eliminar este registro?"
+                        class="btn-danger"/>
 
                     <field name="move_type"
                         widget="statusbar"
@@ -144,6 +154,14 @@
                     title="Cancelar movimiento"
                     class="oe_stat_button"
                     invisible="not is_applied or is_canceled"/>
+                <button string="Eliminar"
+                    name="action_delete"
+                    type="object"
+                    icon="fa-trash"
+                    invisible="is_applied"
+                    title="Eliminar registro"
+                    confirm="¿Seguro que quieres eliminar este registro?"
+                    class="btn-danger"/>
             </list>
         </field>
     </record>

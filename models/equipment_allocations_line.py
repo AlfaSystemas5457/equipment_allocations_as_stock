@@ -72,7 +72,7 @@ class EquipmentAllocationsLines(models.Model):
     @api.constrains("quantity")
     def _check_quantity(self):
         for rec in self:
-            if rec.quantity <= 0:
+            if rec.quantity < 0:
                 raise exceptions.ValidationError("La cantidad debe ser mayor que cero.")
 
     def _apply_record(self):
@@ -347,5 +347,22 @@ class EquipmentAllocationsLines(models.Model):
                 ).apply_movement()
                 continue
 
-    # def unlink(self):
-    #     raise exceptions.UserError("No se puede eliminar.")
+    def action_delete(self):
+        self.unlink()
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Asignación de equipos",
+            "res_model": "equipment.allocations.line",
+            "view_mode": "list,form",
+            "path": "equipment_allocations",
+            "target": "main",
+        }
+
+    def unlink(self):
+        for rec in self:
+            if rec.is_applied:
+                raise exceptions.UserError(
+                    "No se puede eliminar movimientos aplicados."
+                )
+
+        return super(EquipmentAllocationsLines, self).unlink()

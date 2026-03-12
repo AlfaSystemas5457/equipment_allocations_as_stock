@@ -47,6 +47,13 @@
                                 icon="fa-undo"
                                 invisible="not is_applied or is_canceled"
                                 class="oe_stat_button"/>
+                            <button string="Eliminar"
+                                name="action_delete"
+                                type="object"
+                                icon="fa-trash"
+                                invisible="is_applied"
+                                confirm="¿Seguro que quieres eliminar este registro?"
+                                class="btn-danger"/>
                         </list>
                     </field>
                 </page>
