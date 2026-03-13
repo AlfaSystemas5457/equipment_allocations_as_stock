@@ -22,7 +22,7 @@
                         class="oe_stat_button"
                         invisible="not is_applied or is_canceled"/>
                     <button string="Eliminar"
-                        name="action_delete"
+                        name="action_delete_return"
                         type="object"
                         icon="fa-trash"
                         invisible="is_applied"

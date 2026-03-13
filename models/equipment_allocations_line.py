@@ -166,7 +166,9 @@ class EquipmentAllocationsLines(models.Model):
                     ("employee_id", "=", rec.employee_id.id),
                     ("is_applied", "=", True),
                     ("move_type", "in", ["assigned", "return"]),
+                    "|",
                     ("warehouse_origin_id", "=", rec.warehouse_dest_id.id),
+                    ("warehouse_dest_id", "=", rec.warehouse_dest_id.id),
                 ]
 
                 grouped = self.read_group(
@@ -348,6 +350,9 @@ class EquipmentAllocationsLines(models.Model):
                 continue
 
     def action_delete(self):
+        self.unlink()
+
+    def action_delete_return(self):
         self.unlink()
         return {
             "type": "ir.actions.act_window",
