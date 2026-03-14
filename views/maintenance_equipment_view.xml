@@ -87,4 +87,19 @@
         </field>
     </record>
 
+    <record id="hr_equipment_view_list_inherit_maintenance_equipment"
+        model="ir.ui.view">
+        <field name="name">maintenance.equipment.view.form.inherit</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id"
+            ref="hr_maintenance.maintenance_equipment_view_tree_inherit_hr"/>
+        <field name="arch"
+            type="xml">
+            <xpath expr="//field[@name='employee_id']"
+                position="replace"/>
+            <xpath expr="//field[@name='department_id']"
+                position="replace"/>
+        </field>
+    </record>
+
 </odoo>

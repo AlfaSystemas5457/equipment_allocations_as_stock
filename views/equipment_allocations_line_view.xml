@@ -134,6 +134,7 @@
                 <field name="move_type"
                     widget="badge"
                     width="140"
+                    decoration-primary="move_type == 'internal'"
                     decoration-success="move_type == 'income'"
                     decoration-danger="move_type == 'output'"
                     decoration-info="move_type == 'assigned'"

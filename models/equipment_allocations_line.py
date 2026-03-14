@@ -29,6 +29,7 @@ class EquipmentAllocationsLines(models.Model):
             ("return", "Devolución"),
             ("income", "Ingreso"),
             ("output", "Salida"),
+            ("internal", "Traslado interno"),
         ],
         string="Tipo de movimiento",
         default="assigned",
@@ -289,6 +290,56 @@ class EquipmentAllocationsLines(models.Model):
                     line.unlink()
                 continue
 
+            if rec.move_type == "internal":
+                if not rec.warehouse_origin_id or not rec.warehouse_dest_id:
+                    raise exceptions.ValidationError(
+                        "Debe seleccionar almacén origen y destino para traslados internos."
+                    )
+
+                if rec.warehouse_origin_id.id == rec.warehouse_dest_id.id:
+                    raise exceptions.ValidationError(
+                        "Debe seleccionar diferentes almacenes."
+                    )
+
+                if rec.employee_id:
+                    raise exceptions.UserError(
+                        "Un traslado interno no debe tener empleado asociado."
+                    )
+
+                self.env.cr.execute(
+                    "SELECT id FROM warehouse_allocations_line WHERE equipment_id=%s AND warehouse_id=%s FOR UPDATE",
+                    (rec.equipment_id.id, rec.warehouse_origin_id.id),
+                )
+
+                origin_line = self.env["warehouse.allocations.line"].search(
+                    [
+                        ("equipment_id", "=", rec.equipment_id.id),
+                        ("warehouse_id", "=", rec.warehouse_origin_id.id),
+                    ],
+                    limit=1,
+                )
+
+                if not origin_line:
+                    raise exceptions.ValidationError(
+                        "No existe stock de ese equipo en el almacén de origen."
+                    )
+
+                if origin_line.quantity_available < rec.quantity:
+                    raise exceptions.ValidationError(
+                        "No hay suficiente cantidad en el almacén de origen para el traslado interno."
+                    )
+
+                dest_line = self._get_or_create_warehouse_line(
+                    rec.equipment_id, rec.warehouse_dest_id
+                )
+
+                origin_line.quantity_total -= rec.quantity
+                dest_line.quantity_total += rec.quantity
+
+                rec._apply_record()
+                self._clean_empty_warehouse_lines(rec.equipment_id)
+                continue
+
     def cancel_movements(self):
         for rec in self:
             if not rec.is_applied:
@@ -341,6 +392,19 @@ class EquipmentAllocationsLines(models.Model):
                     {
                         "equipment_id": rec.equipment_id.id,
                         "move_type": "income",
+                        "quantity": rec.quantity,
+                        "origin": rec.uid,
+                        "warehouse_origin_id": rec.warehouse_dest_id.id,
+                        "warehouse_dest_id": rec.warehouse_origin_id.id,
+                    }
+                ).apply_movement()
+                continue
+
+            if rec.move_type == "internal":
+                rec.create(
+                    {
+                        "equipment_id": rec.equipment_id.id,
+                        "move_type": "internal",
                         "quantity": rec.quantity,
                         "origin": rec.uid,
                         "warehouse_origin_id": rec.warehouse_dest_id.id,

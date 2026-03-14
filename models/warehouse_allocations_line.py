@@ -72,7 +72,32 @@ class WarehouseAllocationsLine(models.Model):
                 elif move_type == "return":
                     returned = qty
 
-            rec.quantity_total = total_in - total_out
+            internal_in = Allocation.read_group(
+                [
+                    ("equipment_id", "=", rec.equipment_id.id),
+                    ("move_type", "=", "internal"),
+                    ("warehouse_dest_id", "=", rec.warehouse_id.id),
+                    ("is_applied", "=", True),
+                ],
+                ["quantity:sum"],
+                [],
+            )
+
+            internal_out = Allocation.read_group(
+                [
+                    ("equipment_id", "=", rec.equipment_id.id),
+                    ("move_type", "=", "internal"),
+                    ("warehouse_origin_id", "=", rec.warehouse_id.id),
+                    ("is_applied", "=", True),
+                ],
+                ["quantity:sum"],
+                [],
+            )
+
+            internal_in = internal_in[0]["quantity"] if internal_in else 0
+            internal_out = internal_out[0]["quantity"] if internal_out else 0
+
+            rec.quantity_total = total_in - total_out + internal_in - internal_out
             rec.quantity_used = assigned - returned
             rec.quantity_available = rec.quantity_total - rec.quantity_used
 
