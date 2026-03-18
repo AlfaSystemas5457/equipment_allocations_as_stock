@@ -100,6 +100,9 @@ class EquipmentAllocationsLines(models.Model):
             if rec.is_applied:
                 raise exceptions.UserError("Este movimiento ya fue aplicado.")
 
+            if rec.is_canceled:
+                raise exceptions.UserError("Este movimiento ya fue cancelado.")
+
             if rec.quantity <= 0:
                 raise exceptions.ValidationError("La cantidad debe ser mayor a 0.")
 
