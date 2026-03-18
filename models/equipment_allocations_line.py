@@ -15,8 +15,12 @@ class EquipmentAllocationsLines(models.Model):
     equipment_id = fields.Many2one(
         "maintenance.equipment", string="Equipo", required=True, ondelete="restrict"
     )
-    warehouse_origin_id = fields.Many2one("stock.warehouse", string="Almacén de origen")
-    warehouse_dest_id = fields.Many2one("stock.warehouse", string="Almacén de destino")
+    warehouse_origin_id = fields.Many2one(
+        "stock.warehouse", string="Almacén de origen", ondelete="restrict"
+    )
+    warehouse_dest_id = fields.Many2one(
+        "stock.warehouse", string="Almacén de destino", ondelete="restrict"
+    )
     quantity = fields.Integer(string="Cantidad")
 
     is_applied = fields.Boolean(string="Aplicado?", default=False)
